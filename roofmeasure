@@ -1,0 +1,71 @@
+import numpy as np  
+import tensorflow as tf  
+  
+# Roof detection model  
+class RoofDetector(tf.keras.Model):  
+   def __init__(self):  
+      super(RoofDetector, self).__init__()  
+      self.conv1 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(256, 256, 3))  
+      self.conv2 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu')  
+      self.conv3 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu')  
+      self.flatten = tf.keras.layers.Flatten()  
+      self.dense1 = tf.keras.layers.Dense(128, activation='relu')  
+      self.dense2 = tf.keras.layers.Dense(2, activation='softmax')  
+  
+   def call(self, x):  
+      x = self.conv1(x)  
+      x = self.conv2(x)  
+      x = self.conv3(x)  
+      x = self.flatten(x)  
+      x = self.dense1(x)  
+      x = self.dense2(x)  
+      return x  
+  
+# Roof pitch estimation model  
+class RoofPitchEstimator(tf.keras.Model):  
+   def __init__(self):  
+      super(RoofPitchEstimator, self).__init__()  
+      self.conv1 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(256, 256, 3))  
+      self.conv2 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu')  
+      self.conv3 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu')  
+      self.flatten = tf.keras.layers.Flatten()  
+      self.dense1 = tf.keras.layers.Dense(128, activation='relu')  
+      self.dense2 = tf.keras.layers.Dense(1, activation='linear')  
+  
+   def call(self, x):  
+      x = self.conv1(x)  
+      x = self.conv2(x)  
+      x = self.conv3(x)  
+      x = self.flatten(x)  
+      x = self.dense1(x)  
+      x = self.dense2(x)  
+      return x  
+  
+# Load model weights  
+roof_detector_weights = tf.keras.models.load_model('roof_detector_weights.h5')  
+roof_pitch_estimator_weights = tf.keras.models.load_model('roof_pitch_estimator_weights.h5')  
+  
+# Create models  
+roof_detector = RoofDetector()  
+roof_pitch_estimator = RoofPitchEstimator()  
+  
+# Compile models  
+roof_detector.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])  
+roof_pitch_estimator.compile(optimizer='adam', loss='mean_squared_error', metrics=['mean_absolute_error'])  
+  
+# Load input image  
+input_image = tf.keras.preprocessing.image.load_img('input_image.jpg', target_size=(256, 256))  
+  
+# Preprocess input image  
+input_image = tf.keras.preprocessing.image.img_to_array(input_image)  
+input_image = np.expand_dims(input_image, axis=0)  
+  
+# Detect roof  
+roof_detection_output = roof_detector.predict(input_image)  
+  
+# Estimate roof pitch  
+roof_pitch_output = roof_pitch_estimator.predict(input_image)  
+  
+# Print results  
+print('Roof detection output:', roof_detection_output)  
+print('Roof pitch output:', roof_pitch_output)
